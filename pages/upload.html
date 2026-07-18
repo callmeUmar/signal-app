@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal — upload your playlist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0a;
+    --panel: #121412;
+    --panel-line: #232823;
+    --signal: #3EFF8B;
+    --signal-dim: #1c7a3c;
+    --text: #eceee9;
+    --text-mute: #7a7d77;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; }
+
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 6vw;
+    border-bottom: 1px solid var(--panel-line);
+  }
+  .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo::before {
+    content: "";
+    width: 8px; height: 8px;
+    background: var(--signal);
+    border-radius: 50%;
+    box-shadow: 0 0 12px 2px var(--signal);
+  }
+  .back-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--signal); }
+  .step-track {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+  }
+  .step-track .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--panel-line); }
+  .step-track .dot.active { background: var(--signal); box-shadow: 0 0 8px 1px var(--signal); }
+  .step-track .seg { width: 28px; height: 1px; background: var(--panel-line); }
+
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 7vw 6vw 6vw;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--signal);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .eyebrow::before { content: ""; width: 24px; height: 1px; background: var(--signal); }
+  h1.display { font-size: clamp(30px, 4vw, 44px); margin-bottom: 14px; }
+  .sub { color: var(--text-mute); font-size: 16px; max-width: 50ch; margin-bottom: 44px; line-height: 1.6; }
+
+  .connect-row { display: flex; gap: 12px; margin-bottom: 28px; }
+  .connect-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--panel-line);
+    background: var(--panel);
+    color: var(--text);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    transition: border-color 0.2s;
+  }
+  .connect-btn:hover { border-color: var(--signal-dim); }
+  .connect-btn .swatch { width: 8px; height: 8px; border-radius: 50%; }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--text-mute);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 28px;
+  }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--panel-line); }
+
+  .dropzone {
+    border: 1px dashed var(--panel-line);
+    border-radius: 6px;
+    background: var(--panel);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .dropzone.drag-over { border-color: var(--signal); background: #101f15; }
+  .dropzone input { display: none; }
+  .dropzone-icon {
+    width: 44px; height: 44px;
+    margin: 0 auto 16px;
+    border: 1px solid var(--signal-dim);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--signal);
+  }
+  .dropzone p.main { font-size: 15px; margin-bottom: 6px; }
+  .dropzone p.hint { font-size: 13px; color: var(--text-mute); }
+
+  .scope {
+    border: 1px solid var(--panel-line);
+    background: var(--panel);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 28px;
+    display: none;
+  }
+  .scope.show { display: block; }
+  .scope-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--panel-line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mute);
+    letter-spacing: 0.05em;
+  }
+  .scope-head .rec { color: var(--signal); display: flex; align-items: center; gap: 6px; }
+  .rec-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--signal); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  svg.wave { display: block; width: 100%; height: 110px; }
+  .wave-path { fill: none; stroke: var(--signal); stroke-width: 1.5; }
+  .wave-path.dim { fill: none; stroke: var(--signal-dim); stroke-width: 1; }
+
+  .progress-row {
+    padding: 14px 18px;
+    border-top: 1px solid var(--panel-line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+    display: flex;
+    justify-content: space-between;
+  }
+  .progress-row .val { color: var(--signal); }
+
+  .file-list { margin-top: 20px; }
+  .file-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .file-row .name { color: var(--text); }
+  .file-row .status { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-mute); }
+  .file-row .status.done { color: var(--signal); }
+
+  .continue-btn {
+    margin-top: 32px;
+    width: 100%;
+    background: var(--signal);
+    color: #05170a;
+    border: none;
+    padding: 15px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    opacity: 0.4;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .continue-btn.ready { opacity: 1; pointer-events: auto; }
+
+  @media (max-width: 600px) {
+    .connect-row { flex-direction: column; }
+    .step-track { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div style="display:flex;align-items:center;gap:20px">
+    <div class="logo">signal</div>
+    <a href="landing.html" class="back-link">← back</a>
+  </div>
+  <div class="step-track">
+    <span>upload</span>
+    <span class="dot active"></span>
+    <span class="seg"></span>
+    <span class="dot"></span>
+    <span>tune</span>
+    <span class="seg"></span>
+    <span class="dot"></span>
+    <span>generate</span>
+  </div>
+</nav>
+
+<main>
+  <div class="eyebrow">step 01</div>
+  <h1 class="display">Bring in your playlist</h1>
+  <p class="sub">Connect a streaming service to pull in your library, or drop audio files directly. Either way, nothing leaves your session except the numbers Signal extracts.</p>
+
+  <div class="connect-row">
+    <button class="connect-btn" id="connectSpotify">
+      <span class="swatch" style="background:#1ed760"></span> Connect Spotify
+    </button>
+    <button class="connect-btn" id="connectApple">
+      <span class="swatch" style="background:#fa586a"></span> Connect Apple Music
+    </button>
+  </div>
+
+  <div class="divider">or upload files directly</div>
+
+  <div class="dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept="audio/*" multiple>
+    <div class="dropzone-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M12 4l-5 5M12 4l5 5"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+    </div>
+    <p class="main">Drop tracks here, or click to browse</p>
+    <p class="hint mono">MP3, WAV, M4A — up to 25MB each</p>
+  </div>
+
+  <div class="file-list" id="fileList"></div>
+
+  <div class="scope" id="scope">
+    <div class="scope-head">
+      <span id="scopeLabel">ANALYZING — track_01.mp3</span>
+      <span class="rec"><span class="rec-dot"></span>LIVE</span>
+    </div>
+    <svg class="wave" viewBox="0 0 1000 110" preserveAspectRatio="none">
+      <path class="wave-path dim" id="waveDim" d="" />
+      <path class="wave-path" id="waveMain" d="" />
+    </svg>
+    <div class="progress-row">
+      <span>extracting tempo, key, energy, melody</span>
+      <span class="val mono" id="progressVal">0%</span>
+    </div>
+  </div>
+
+  <button class="continue-btn" id="continueBtn">Continue to tuning →</button>
+</main>
+
+<script type="module" src="/src/upload.ts"></script>
+
+</body>
+</html>

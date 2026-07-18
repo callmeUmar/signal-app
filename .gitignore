@@ -1,0 +1,16 @@
+node_modules/
+dist/
+stems/
+output/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.DS_Store
+
+# exclude uploaded audio (large + potentially copyrighted)
+public/*.mp3
+public/*.wav
+*.mp3
+*.wav
+*.m4a

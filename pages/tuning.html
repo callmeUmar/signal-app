@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal — tune your sound</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0a;
+    --panel: #121412;
+    --panel-line: #232823;
+    --signal: #3EFF8B;
+    --signal-dim: #1c7a3c;
+    --text: #eceee9;
+    --text-mute: #7a7d77;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; }
+
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 6vw;
+    border-bottom: 1px solid var(--panel-line);
+  }
+  .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo::before {
+    content: "";
+    width: 8px; height: 8px;
+    background: var(--signal);
+    border-radius: 50%;
+    box-shadow: 0 0 12px 2px var(--signal);
+  }
+  .back-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--signal); }
+  .step-track {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+  }
+  .step-track .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--panel-line); }
+  .step-track .dot.active { background: var(--signal); box-shadow: 0 0 8px 1px var(--signal); }
+  .step-track .dot.done { background: var(--signal-dim); }
+  .step-track .seg { width: 28px; height: 1px; background: var(--panel-line); }
+
+  main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 6vw 6vw 6vw;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--signal);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .eyebrow::before { content: ""; width: 24px; height: 1px; background: var(--signal); }
+  h1.display { font-size: clamp(28px, 3.6vw, 40px); margin-bottom: 10px; }
+  .sub { color: var(--text-mute); font-size: 15px; max-width: 56ch; line-height: 1.6; margin-bottom: 40px; }
+
+  .panel {
+    border: 1px solid var(--panel-line);
+    background: var(--panel);
+    border-radius: 6px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+  }
+  .panel-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .slider-row:last-child { margin-bottom: 0; }
+  .slider-row label {
+    font-size: 13px;
+    color: var(--text-mute);
+    width: 150px;
+    flex-shrink: 0;
+  }
+  input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 3px;
+    background: var(--panel-line);
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--signal);
+    cursor: pointer;
+    box-shadow: 0 0 8px 0 rgba(62,255,139,0.5);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--signal);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 0 8px 0 rgba(62,255,139,0.5);
+  }
+  .slider-row .val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--signal);
+    min-width: 56px;
+    text-align: right;
+  }
+
+  .key-selector { margin-top: 20px; }
+  .key-selector .slider-row label { width: 150px; }
+  .key-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 4px;
+    flex: 1;
+  }
+  .key-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-align: center;
+    padding: 7px 0;
+    border: 1px solid var(--panel-line);
+    border-radius: 3px;
+    color: var(--text-mute);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--bg);
+  }
+  .key-chip:hover { border-color: var(--signal-dim); color: var(--text); }
+  .key-chip.active {
+    background: var(--signal);
+    color: #05170a;
+    border-color: var(--signal);
+    font-weight: 500;
+  }
+  .mode-toggle {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    margin-left: 166px;
+  }
+  .mode-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 6px 16px;
+    border: 1px solid var(--panel-line);
+    border-radius: 20px;
+    color: var(--text-mute);
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.15s;
+  }
+  .mode-btn.active { border-color: var(--signal); color: var(--signal); }
+
+  .ref-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .ref-card {
+    background: var(--bg);
+    border: 1px solid var(--panel-line);
+    border-radius: 6px;
+    padding: 12px;
+  }
+  .ref-card.real { border-color: var(--signal-dim); }
+  .ref-name { font-size: 13px; margin-bottom: 2px; }
+  .ref-name .tag { color: var(--signal); font-size: 10px; font-weight: 400; font-family: 'JetBrains Mono', monospace; }
+  .ref-meta { font-size: 11px; color: var(--text-mute); margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
+  .ref-weight { display: flex; align-items: center; gap: 8px; }
+  .ref-weight input[type="range"] { height: 3px; }
+  .ref-weight .val { font-family: 'JetBrains Mono', monospace; font-size: 11px; min-width: 30px; text-align: right; }
+
+  .prompt-out {
+    background: var(--bg);
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  .direction-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--panel-line);
+    border-radius: 4px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 64px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .direction-input:focus { border-color: var(--signal-dim); }
+  .direction-input::placeholder { color: var(--text-mute); }
+
+  .final-prompt {
+    background: var(--bg);
+    border: 1px solid var(--signal-dim);
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--signal);
+    line-height: 1.7;
+  }
+
+  .continue-btn {
+    margin-top: 8px;
+    width: 100%;
+    background: var(--signal);
+    color: #05170a;
+    border: none;
+    padding: 15px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: box-shadow 0.2s;
+  }
+  .continue-btn:hover { box-shadow: 0 0 20px 0 rgba(62,255,139,0.3); }
+
+  /* Generating animation overlay */
+  .gen-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(5,6,5,0.55);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease, backdrop-filter 0.7s ease, -webkit-backdrop-filter 0.7s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .gen-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .gen-scale {
+    transform: scale(0.08);
+    transition: transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .gen-overlay.grown .gen-scale { transform: scale(1); }
+
+  .gen-spin {
+    width: min(70vw, 70vh, 640px);
+    height: min(70vw, 70vh, 640px);
+    position: relative;
+    animation: gen-rotate 9s linear infinite;
+  }
+  @keyframes gen-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .gen-core {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 34%;
+    height: 34%;
+    margin: -17% 0 0 -17%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #6dffb0, #1e9a52 70%);
+    box-shadow: 0 0 70px 14px rgba(62,255,139,0.35);
+    animation: gen-core-beat 1.1s ease-in-out infinite;
+    z-index: 2;
+  }
+  @keyframes gen-core-beat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+
+  .gen-stalk-anchor {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    z-index: 1;
+  }
+  .gen-stalk {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    border-radius: 3px;
+    transform-origin: bottom center;
+    animation: gen-stretch 1.1s ease-in-out infinite;
+  }
+  @keyframes gen-stretch {
+    0%, 100% { transform: translateX(-50%) scaleY(0.72); }
+    50% { transform: translateX(-50%) scaleY(1.18); }
+  }
+
+  .gen-label {
+    position: absolute;
+    bottom: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--signal);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .gen-overlay.grown .gen-label { opacity: 0.8; }
+
+  .result-panel {
+    max-width: 860px;
+    margin: 0 auto;
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .result-panel.show { opacity: 1; transform: translateY(0) scale(1); }
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .clip-btn {
+    background: var(--bg);
+    border: 1px solid var(--panel-line);
+    border-radius: 6px;
+    padding: 18px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .clip-btn:hover { border-color: var(--signal-dim); }
+  .clip-btn svg { width: 20px; height: 20px; color: var(--signal); margin-bottom: 6px; }
+  .clip-btn .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-mute); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gen-spin { animation: none; }
+    .gen-stalk { animation: none; }
+    .gen-core { animation: none; }
+  }
+
+  @media (max-width: 700px) {
+    .step-track { display: none; }
+    .slider-row label { width: 100px; }
+    .key-grid { grid-template-columns: repeat(6, 1fr); }
+    .mode-toggle { margin-left: 0; margin-top: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div style="display:flex;align-items:center;gap:20px">
+    <div class="logo">signal</div>
+    <a href="pick-five.html" class="back-link">← back</a>
+  </div>
+  <div class="step-track">
+    <span>upload</span>
+    <span class="dot done"></span>
+    <span class="seg"></span>
+    <span class="dot done"></span>
+    <span>tune</span>
+    <span class="seg"></span>
+    <span class="dot active"></span>
+    <span>generate</span>
+  </div>
+</nav>
+
+<main>
+  <div class="eyebrow">step 03</div>
+  <h1 class="display">Tune your sound</h1>
+  <p class="sub">Adjust the master controls, or blend directly from your five picks. The prompt vector updates live as you move things.</p>
+
+  <div class="panel">
+    <div class="panel-label">Master controls</div>
+    <div class="slider-row">
+      <label>Tempo</label>
+      <input type="range" id="m-tempo" min="60" max="180" value="123">
+      <span class="val" id="m-tempo-out">123bpm</span>
+    </div>
+    <div class="slider-row">
+      <label>Energy</label>
+      <input type="range" id="m-energy" min="0" max="100" value="65">
+      <span class="val" id="m-energy-out">65%</span>
+    </div>
+    <div class="slider-row">
+      <label>Brightness</label>
+      <input type="range" id="m-brightness" min="0" max="100" value="36">
+      <span class="val" id="m-brightness-out">36%</span>
+    </div>
+    <div class="slider-row">
+      <label>Acoustic → electronic</label>
+      <input type="range" id="m-acoustic" min="0" max="100" value="18">
+      <span class="val" id="m-acoustic-out">18%</span>
+    </div>
+    <div class="slider-row">
+      <label>Sparse → dense</label>
+      <input type="range" id="m-density" min="0" max="100" value="37">
+      <span class="val" id="m-density-out">37%</span>
+    </div>
+
+    <div class="key-selector">
+      <div class="slider-row" style="margin-bottom:10px">
+        <label>Key</label>
+        <div class="key-grid" id="keyGrid"></div>
+      </div>
+      <div class="mode-toggle" id="modeToggle">
+        <button class="mode-btn active" data-mode="minor">minor</button>
+        <button class="mode-btn" data-mode="major">major</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">Blend from your five</div>
+    <div class="ref-grid" id="refGrid"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">Generated prompt vector</div>
+    <div class="prompt-out" id="promptOut"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">Your direction (optional)</div>
+    <textarea class="direction-input" id="directionInput" placeholder="Tell the AI what you want, in your own words — e.g. &quot;moody, for a rainy scene, guitar-led, feels nostalgic but not sad&quot;"></textarea>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">Final prompt sent to generator</div>
+    <div class="final-prompt" id="finalPrompt"></div>
+  </div>
+
+  <button class="continue-btn" id="continueBtn">Generate sound-board →</button>
+
+  <div class="result-panel" id="resultPanel" style="margin-top:20px">
+    <div class="panel">
+      <div class="panel-label">Your sound-board</div>
+      <div class="result-grid">
+        <div class="clip-btn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><div class="label">clip 1</div></div>
+        <div class="clip-btn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><div class="label">clip 2</div></div>
+        <div class="clip-btn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><div class="label">clip 3</div></div>
+        <div class="clip-btn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><div class="label">clip 4</div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="gen-overlay" id="genOverlay">
+  <div class="gen-scale" id="genScale">
+    <div class="gen-spin" id="genSpin">
+      <div class="gen-core"></div>
+      <div id="genPetals"></div>
+    </div>
+    <div class="gen-label">analyzing signal · generating sound</div>
+  </div>
+</div>
+
+<script type="module" src="/src/tuning.ts"></script>
+
+</body>
+</html>

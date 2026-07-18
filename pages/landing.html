@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal — find the sound that's yours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0a;
+    --panel: #121412;
+    --panel-line: #232823;
+    --signal: #3EFF8B;
+    --signal-dim: #1c7a3c;
+    --text: #eceee9;
+    --text-mute: #7a7d77;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+  .top-half {
+    position: relative;
+    overflow: hidden;
+  }
+  .bg-signal {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .bg-signal path {
+    fill: none;
+    stroke: var(--signal);
+    stroke-width: 2;
+  }
+  nav, .hero {
+    position: relative;
+    z-index: 1;
+  }
+  section.flow, footer {
+    position: relative;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .display {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 6vw;
+    border-bottom: 1px solid var(--panel-line);
+  }
+  .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background: var(--signal);
+    border-radius: 50%;
+    box-shadow: 0 0 12px 2px var(--signal);
+    display: inline-block;
+  }
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    font-size: 14px;
+    color: var(--text-mute);
+  }
+  .nav-links a { color: inherit; text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--signal); }
+  .nav-cta {
+    font-size: 13px;
+    padding: 9px 18px;
+    border: 1px solid var(--signal-dim);
+    color: var(--signal);
+    border-radius: 3px;
+    text-decoration: none;
+    transition: all 0.2s;
+    font-family: 'JetBrains Mono', monospace;
+    margin-right: 64px;
+  }
+  .nav-cta:hover { background: var(--signal); color: #05170a; border-color: var(--signal); }
+
+  .hero {
+    padding: 9vw 6vw 6vw;
+    position: relative;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--signal);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 24px;
+    height: 1px;
+    background: var(--signal);
+  }
+  h1.display {
+    font-size: clamp(40px, 6.4vw, 92px);
+    line-height: 0.98;
+    max-width: 15ch;
+    margin-bottom: 28px;
+  }
+  h1.display .accent { color: var(--signal); }
+  .hero-sub {
+    font-size: 18px;
+    color: var(--text-mute);
+    max-width: 46ch;
+    line-height: 1.6;
+    margin-bottom: 44px;
+  }
+  .hero-actions { display: flex; gap: 16px; align-items: center; margin-bottom: 80px; }
+  .btn-primary {
+    background: var(--signal);
+    color: #05170a;
+    border: none;
+    padding: 15px 28px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: transform 0.15s, box-shadow 0.2s;
+  }
+  .btn-primary:hover { box-shadow: 0 0 24px 0 rgba(62,255,139,0.35); transform: translateY(-1px); }
+  .btn-ghost {
+    color: var(--text-mute);
+    text-decoration: none;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scope {
+    border: 1px solid var(--panel-line);
+    background: var(--panel);
+    border-radius: 4px;
+    padding: 0;
+    overflow: hidden;
+  }
+  .scope-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--panel-line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mute);
+    letter-spacing: 0.05em;
+  }
+  .scope-head .rec { color: var(--signal); display: flex; align-items: center; gap: 6px; }
+  .rec-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--signal);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  svg.wave { display: block; width: 100%; height: 160px; }
+  .wave-path { fill: none; stroke: var(--signal); stroke-width: 1.5; }
+  .wave-path.dim { stroke: var(--signal-dim); stroke-width: 1; }
+
+  .readout {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--panel-line);
+  }
+  .readout div {
+    padding: 16px 18px;
+    border-right: 1px solid var(--panel-line);
+  }
+  .readout div:last-child { border-right: none; }
+  .readout .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-mute);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .readout .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    color: var(--signal);
+  }
+
+  section.flow { padding: 8vw 6vw; border-top: 1px solid var(--panel-line); }
+  .section-head { margin-bottom: 56px; }
+  .section-head .eyebrow { margin-bottom: 16px; }
+  h2.display { font-size: clamp(28px, 3.4vw, 44px); max-width: 20ch; }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--panel-line);
+    border: 1px solid var(--panel-line);
+  }
+  .step {
+    background: var(--bg);
+    padding: 32px 28px;
+    position: relative;
+  }
+  .step .idx {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--signal-dim);
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .step h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 19px;
+    margin-bottom: 10px;
+  }
+  .step p { color: var(--text-mute); font-size: 14px; line-height: 1.6; }
+
+  footer {
+    padding: 40px 6vw;
+    border-top: 1px solid var(--panel-line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-mute);
+  }
+
+  @media (max-width: 720px) {
+    .readout { grid-template-columns: repeat(2, 1fr); }
+    .readout div:nth-child(2) { border-right: none; }
+    .steps { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+  }
+
+  .player-btn {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 50;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--signal-dim);
+    background: rgba(10,11,10,0.85);
+    color: var(--signal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .player-btn:hover { border-color: var(--signal); box-shadow: 0 0 16px 0 rgba(62,255,139,0.3); }
+  .player-btn i { font-size: 18px; }
+
+  .caption-rail {
+    position: fixed;
+    right: 5vw;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 240px;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .caption-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--signal);
+    opacity: 0;
+    text-align: right;
+    margin-bottom: 14px;
+    transition: opacity 1.2s ease;
+  }
+  .caption-line.show { opacity: 0.55; }
+  @media (max-width: 900px) {
+    .caption-rail { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rec-dot { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<button class="player-btn" id="playerBtn" aria-label="Play ambient sound">
+  <svg id="iconPlay" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+  <svg id="iconPause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+</button>
+
+<div class="caption-rail" id="captionRail"></div>
+
+<div class="top-half">
+<svg class="bg-signal" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+  <defs>
+    <radialGradient id="glowGrad">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+    <mask id="cursorMask">
+      <rect x="0" y="0" width="1000" height="1000" fill="black" />
+      <circle id="glowCircle" cx="500" cy="200" r="180" fill="url(#glowGrad)" />
+    </mask>
+  </defs>
+  <path id="bg1" opacity="0.22" d="" />
+  <path id="bg2" opacity="0.16" d="" />
+  <path id="bg3" opacity="0.13" d="" />
+  <path id="bg4" opacity="0.1" d="" />
+  <path id="bg1glow" opacity="0.9" mask="url(#cursorMask)" d="" />
+  <path id="bg2glow" opacity="0.75" mask="url(#cursorMask)" d="" />
+  <path id="bg3glow" opacity="0.65" mask="url(#cursorMask)" d="" />
+  <path id="bg4glow" opacity="0.55" mask="url(#cursorMask)" d="" />
+</svg>
+
+<nav>
+  <div class="logo">signal</div>
+  <div class="nav-links">
+    <a href="#flow">How it works</a>
+    <a href="#">Pricing</a>
+    <a href="#">Docs</a>
+  </div>
+  <a href="upload.html" class="nav-cta mono">launch app</a>
+</nav>
+
+<div class="hero">
+  <div class="eyebrow">audio analysis engine</div>
+  <h1 class="display">Every playlist has <span class="accent">a signature.</span> Find yours, then build with it.</h1>
+  <p class="hero-sub">Upload your library. Pick five tracks that feel like you. Signal reads the tempo, key, and texture underneath them — then hands you a sound you can score a film, cut a video, or write a track with.</p>
+  <div class="hero-actions">
+    <button class="btn-primary" id="startBtn">Start analyzing →</button>
+    <a href="#flow" class="btn-ghost">See how it works ↓</a>
+  </div>
+
+  <div class="scope">
+    <div class="scope-head">
+      <span>NOW ANALYZING — sweater_weather.mp3</span>
+      <span class="rec"><span class="rec-dot"></span>LIVE</span>
+    </div>
+    <svg class="wave" viewBox="0 0 1000 160" preserveAspectRatio="none">
+      <path class="wave-path dim" id="waveDim" d="" />
+      <path class="wave-path" id="waveMain" d="" />
+    </svg>
+    <div class="readout">
+      <div><div class="label">Tempo</div><div class="value">123 bpm</div></div>
+      <div><div class="label">Key</div><div class="value">G minor</div></div>
+      <div><div class="label">Energy</div><div class="value">65%</div></div>
+      <div><div class="label">Brightness</div><div class="value">36%</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+
+<section class="flow" id="flow">
+  <div class="section-head">
+    <div class="eyebrow">the process</div>
+    <h2 class="display">From playlist to prompt vector in three passes.</h2>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="idx mono">01</div>
+      <h3>Upload and select</h3>
+      <p>Pull in a playlist from Spotify or Apple Music, then mark the five tracks that actually feel like you.</p>
+    </div>
+    <div class="step">
+      <div class="idx mono">02</div>
+      <h3>Signal reads the mix</h3>
+      <p>Tempo, key, energy, brightness, and melodic contour — extracted directly from the audio, not guessed from genre tags.</p>
+    </div>
+    <div class="step">
+      <div class="idx mono">03</div>
+      <h3>Tune and generate</h3>
+      <p>Blend your references on a mixing board of sliders, then generate a sound built from your own taste.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="mono">signal / 2026</span>
+  <span>built for scoring, sampling, and everything in between</span>
+</footer>
+
+<script type="module" src="/src/landing.ts"></script>
+
+</body>
+</html>

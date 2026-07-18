@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal — pick your five</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0a;
+    --panel: #121412;
+    --panel-line: #232823;
+    --signal: #3EFF8B;
+    --signal-dim: #1c7a3c;
+    --text: #eceee9;
+    --text-mute: #7a7d77;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; }
+
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 6vw;
+    border-bottom: 1px solid var(--panel-line);
+  }
+  .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo::before {
+    content: "";
+    width: 8px; height: 8px;
+    background: var(--signal);
+    border-radius: 50%;
+    box-shadow: 0 0 12px 2px var(--signal);
+  }
+  .back-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--signal); }
+  .step-track {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+  }
+  .step-track .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--panel-line); }
+  .step-track .dot.active { background: var(--signal); box-shadow: 0 0 8px 1px var(--signal); }
+  .step-track .dot.done { background: var(--signal-dim); }
+  .step-track .seg { width: 28px; height: 1px; background: var(--panel-line); }
+
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 6vw 6vw 6vw;
+  }
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--signal);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .eyebrow::before { content: ""; width: 24px; height: 1px; background: var(--signal); }
+  h1.display { font-size: clamp(28px, 3.6vw, 40px); margin-bottom: 10px; }
+  .sub { color: var(--text-mute); font-size: 15px; max-width: 48ch; line-height: 1.6; }
+
+  .counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-mute);
+    border: 1px solid var(--panel-line);
+    border-radius: 20px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .counter .n { color: var(--signal); font-weight: 500; }
+  .counter.full { border-color: var(--signal-dim); }
+
+  .search-box {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .search-box svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    color: var(--text-mute);
+    pointer-events: none;
+  }
+  .search-box input {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: 6px;
+    padding: 12px 14px 12px 40px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box input:focus { border-color: var(--signal-dim); }
+  .search-box input::placeholder { color: var(--text-mute); }
+
+  .track-list { border: 1px solid var(--panel-line); border-radius: 6px; overflow: hidden; }
+  .track-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--panel-line);
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .track-row:last-child { border-bottom: none; }
+  .track-row:hover { background: #171a17; }
+  .track-row.selected { background: #101f15; }
+  .track-row.disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .track-check {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1px solid var(--panel-line);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .track-row.selected .track-check {
+    background: var(--signal);
+    border-color: var(--signal);
+  }
+  .track-check svg { width: 11px; height: 11px; display: none; color: #05170a; }
+  .track-row.selected .track-check svg { display: block; }
+
+  .track-info { flex: 1; min-width: 0; }
+  .track-name { font-size: 14px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-artist { font-size: 12px; color: var(--text-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .track-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--signal);
+    border: 1px solid var(--signal-dim);
+    border-radius: 3px;
+    padding: 3px 7px;
+    flex-shrink: 0;
+  }
+  .track-duration {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+    flex-shrink: 0;
+  }
+
+  .continue-btn {
+    margin-top: 32px;
+    width: 100%;
+    background: var(--signal);
+    color: #05170a;
+    border: none;
+    padding: 15px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    opacity: 0.4;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .continue-btn.ready { opacity: 1; pointer-events: auto; }
+
+  @media (max-width: 600px) {
+    .step-track { display: none; }
+    .track-tag { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div style="display:flex;align-items:center;gap:20px">
+    <div class="logo">signal</div>
+    <a href="upload.html" class="back-link">← back</a>
+  </div>
+  <div class="step-track">
+    <span>upload</span>
+    <span class="dot done"></span>
+    <span class="seg"></span>
+    <span class="dot active"></span>
+    <span>tune</span>
+    <span class="seg"></span>
+    <span class="dot"></span>
+    <span>generate</span>
+  </div>
+</nav>
+
+<main>
+  <div class="top-row">
+    <div>
+      <div class="eyebrow">step 02</div>
+      <h1 class="display">Pick your five</h1>
+      <p class="sub">Choose the tracks that feel most like you. Signal blends their tempo, key, and texture into your starting sound.</p>
+    </div>
+    <div class="counter mono" id="counter"><span class="n" id="counterN">0</span> / 5 selected</div>
+  </div>
+
+  <div class="search-box">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="text" id="searchInput" placeholder="Search your playlist...">
+  </div>
+
+  <div class="track-list" id="trackList"></div>
+
+  <button class="continue-btn" id="continueBtn">Continue to tuning →</button>
+</main>
+
+<script type="module" src="/src/pick-five.ts"></script>
+
+</body>
+</html>

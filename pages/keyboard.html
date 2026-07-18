@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal — your melody</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0a;
+    --panel: #121412;
+    --panel-line: #232823;
+    --signal: #3EFF8B;
+    --signal-dim: #1c7a3c;
+    --text: #eceee9;
+    --text-mute: #7a7d77;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; }
+
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 6vw;
+    border-bottom: 1px solid var(--panel-line);
+  }
+  .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo::before {
+    content: "";
+    width: 8px; height: 8px;
+    background: var(--signal);
+    border-radius: 50%;
+    box-shadow: 0 0 12px 2px var(--signal);
+  }
+  .back-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--signal); }
+  .step-track {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+  }
+  .step-track .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--panel-line); }
+  .step-track .dot.active { background: var(--signal); box-shadow: 0 0 8px 1px var(--signal); }
+  .step-track .dot.done { background: var(--signal-dim); }
+  .step-track .seg { width: 22px; height: 1px; background: var(--panel-line); }
+
+  main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 6vw 6vw 6vw;
+  }
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--signal);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .eyebrow::before { content: ""; width: 24px; height: 1px; background: var(--signal); }
+  h1.display { font-size: clamp(28px, 3.6vw, 40px); margin-bottom: 10px; }
+  .sub { color: var(--text-mute); font-size: 15px; max-width: 54ch; line-height: 1.6; }
+
+  .play-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--signal);
+    color: #05170a;
+    border: none;
+    padding: 12px 22px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+    transition: box-shadow 0.2s;
+  }
+  .play-btn:hover { box-shadow: 0 0 20px 0 rgba(62,255,139,0.35); }
+  .play-btn svg { width: 14px; height: 14px; }
+
+  .panel {
+    border: 1px solid var(--panel-line);
+    background: var(--panel);
+    border-radius: 6px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+  }
+  .panel-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mute);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .panel-label .tag {
+    color: var(--signal);
+    border: 1px solid var(--signal-dim);
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 10px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .roll {
+    position: relative;
+    height: 90px;
+    background: var(--bg);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .roll-note {
+    position: absolute;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--signal);
+    opacity: 0.55;
+    transition: opacity 0.15s, box-shadow 0.15s;
+  }
+  .roll-note.active {
+    opacity: 1;
+    box-shadow: 0 0 10px 1px rgba(62,255,139,0.6);
+  }
+  .roll-playhead {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--text);
+    opacity: 0;
+    transition: left 0.05s linear;
+  }
+  .roll-playhead.show { opacity: 0.8; }
+
+  .keyboard-wrap {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .keyboard {
+    position: relative;
+    height: 140px;
+    display: flex;
+    width: max-content;
+  }
+  .white-key {
+    position: relative;
+    width: 34px;
+    height: 100%;
+    background: #d8dbd6;
+    border: 1px solid #0a0b0a;
+    border-radius: 0 0 4px 4px;
+    transition: background 0.1s;
+  }
+  .white-key.active { background: var(--signal); }
+  .white-key .key-label {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #5a5d57;
+  }
+  .black-key {
+    position: absolute;
+    top: 0;
+    width: 22px;
+    height: 60%;
+    background: #16180f;
+    border: 1px solid #000;
+    border-radius: 0 0 3px 3px;
+    z-index: 2;
+    transition: background 0.1s;
+  }
+  .black-key.active { background: var(--signal-dim); }
+
+  .clip-info {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+    margin-top: 14px;
+  }
+  .clip-info .val { color: var(--signal); }
+
+  .continue-btn {
+    margin-top: 8px;
+    width: 100%;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--panel-line);
+    padding: 15px;
+    font-size: 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .continue-btn:hover { border-color: var(--signal-dim); }
+
+  @media (max-width: 700px) {
+    .step-track { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div style="display:flex;align-items:center;gap:20px">
+    <div class="logo">signal</div>
+    <a href="tuning.html" class="back-link">← back</a>
+  </div>
+  <div class="step-track">
+    <span>upload</span>
+    <span class="dot done"></span>
+    <span class="seg"></span>
+    <span class="dot done"></span>
+    <span>tune</span>
+    <span class="seg"></span>
+    <span class="dot done"></span>
+    <span>generate</span>
+    <span class="seg"></span>
+    <span class="dot active"></span>
+    <span>keyboard</span>
+  </div>
+</nav>
+
+<main>
+  <div class="top-row">
+    <div>
+      <div class="eyebrow">step 04</div>
+      <h1 class="display">Your melody, note by note</h1>
+      <p class="sub">This is the actual pitch contour Signal pulled from your reference track — play it back, or use it as a starting phrase in your own session.</p>
+    </div>
+    <button class="play-btn" id="playBtn">
+      <svg id="btnIconPlay" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      <svg id="btnIconPause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      <span id="btnLabel">Play melody</span>
+    </button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">
+      <span>Piano roll</span>
+      <span class="tag">from sweater_weather.mp3 · 30.2s–32.7s window</span>
+    </div>
+    <div class="roll" id="roll">
+      <div class="roll-playhead" id="playhead"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">Keyboard</div>
+    <div class="keyboard-wrap">
+      <div class="keyboard" id="keyboard"></div>
+    </div>
+    <div class="clip-info">
+      <span>range: <span class="val" id="rangeOut">C3 – G#4</span></span>
+      <span>notes: <span class="val" id="countOut">0</span></span>
+      <span>duration: <span class="val" id="durOut">0.0s</span></span>
+    </div>
+  </div>
+
+  <button class="continue-btn" id="backBtn">← Back to tuning</button>
+</main>
+
+<script type="module" src="/src/keyboard.ts"></script>
+
+</body>
+</html>
